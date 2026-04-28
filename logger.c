@@ -12,7 +12,21 @@
 static FILE* log_file = NULL;
 
 void initLogger() {
-    log_file = fopen(LOG_FILE, "a");
+    const char* log_paths[] = {
+        "vending_machine.log",           // bieżący katalog
+        "../vending_machine.log",        // katalog nadrzędny
+        "../../vending_machine.log",     // 2 poziomy w górę
+        NULL
+    };
+    
+    for (int i = 0; log_paths[i] != NULL; i++) {
+        log_file = fopen(log_paths[i], "a");
+        if (log_file != NULL) {
+            printf("Logi zapisywane do: %s\n", log_paths[i]);
+            break;
+        }
+    }
+    
     if (log_file == NULL) {
         perror("Nie można otworzyć pliku logu");
         exit(1);
@@ -74,7 +88,6 @@ void sendMessageToMaintenance(const char* message) {
     if (pipe_fd != -1) {
         ssize_t written = write(pipe_fd, message, strlen(message));
         if (written > 0) {
-            // newline dla łatwiejszego odczytu
             write(pipe_fd, "\n", 1);
         }
         close(pipe_fd);

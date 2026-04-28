@@ -42,8 +42,16 @@ void cleanup() {
 
 int getIntInput() {
     char buffer[100];
-    fgets(buffer, sizeof(buffer), stdin);
-    return atoi(buffer);
+    if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+        return -1; // EOF
+    }
+
+    buffer[strcspn(buffer, "\n")] = 0;
+    if (strlen(buffer) > 0) {
+        return atoi(buffer);
+    }
+    
+    return 0; // Pusty input
 }
 
 int verifyAdminPin() {
@@ -228,6 +236,17 @@ int main() {
     while (main_running) {
         showMenu();
         choice = getIntInput();
+        
+        if (choice == -1) {
+            // EOF - zakończ program
+            main_running = 0;
+            break;
+        }
+        
+        if (choice == 0) {
+            // Pusty input - pomiń
+            continue;
+        }
 
         switch(choice) {
             case 1: displayProducts(&vm); break;

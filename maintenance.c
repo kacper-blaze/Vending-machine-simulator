@@ -71,6 +71,7 @@ void maintenanceProcess() {
     writeLog(LOG_SYSTEM, "Proces maintenance uruchomiony - rozpoczynam pętlę");
     
     while (maintenance_running) {
+        
         // Spróbuj otworzyć potok
         int pipe_fd = open(PIPE_PATH, O_RDONLY | O_NONBLOCK);
         if (pipe_fd != -1) {
