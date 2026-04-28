@@ -1,6 +1,6 @@
 # Vending Machine Simulator
 
-C-based vending machine simulator with product management, coin handling, and admin panel. Features Polish currency support and inventory tracking.
+C-based vending machine simulator with product management, coin handling, and admin panel. Features Polish currency support and inventory tracking. Available in both console and GUI versions.
 
 ## Features
 
@@ -14,11 +14,13 @@ C-based vending machine simulator with product management, coin handling, and ad
 - **Inter-Process Communication**: Named pipe communication between processes
 - **Signal Handling**: Graceful shutdown with SIGINT/SIGTERM support
 - **Real-time Balance Display**: Shows current balance after coin insertion
+- **Graphical Interface**: GTK+3-based GUI version with interactive buttons and visual feedback
 
 ## Building
 
-This project uses CMake for building:
+This project uses CMake for building. Two versions are available:
 
+### Console Version (Always Builds)
 ```bash
 mkdir build
 cd build
@@ -26,21 +28,66 @@ cmake ..
 make
 ```
 
-## Usage
+### GUI Version (Requires GTK+3)
+To build the GUI version, you need to install GTK+3 development libraries first:
 
-Run the executable:
+**Ubuntu/Debian:**
 ```bash
-./vending_machine_simulator
+sudo apt install libgtk-3-dev
 ```
 
-### Main Menu Options:
+**Fedora/RHEL:**
+```bash
+sudo dnf install gtk3-devel
+```
+
+**Arch Linux:**
+```bash
+sudo pacman -S gtk3
+```
+
+After installing GTK+3, rebuild the project:
+```bash
+cd build
+cmake ..
+make
+```
+
+The build system will automatically detect GTK+3 and build both versions:
+- `vendingMachineSimulator` - Console version
+- `vendingMachineSimulatorGUI` - GUI version
+
+If GTK+3 is not found, only the console version will be built.
+
+## Usage
+
+### Console Version
+```bash
+./vendingMachineSimulator
+```
+
+### GUI Version
+```bash
+./vendingMachineSimulatorGUI
+```
+
+### Main Menu Options (Console):
 1. **Display Products** - View available products with prices and quantities
 2. **Insert Money** - Add coins to your balance
 3. **Select Product** - Purchase a product
 4. **Return Change** - Get your remaining balance back
 5. **Admin Panel** - Access admin functions (PIN: 1111)
 
-### Admin Functions:
+### GUI Features:
+- **Product Grid**: Visual display of all products with prices and quantities
+- **Coin Buttons**: Click to insert coins (10gr, 20gr, 50gr, 1zł, 2zł, 5zł)
+- **Product Selection**: Click on product buttons to purchase
+- **Balance Display**: Real-time balance updates
+- **Return Change**: Automatic change calculation and display
+- **Admin Access**: PIN-protected admin panel (PIN: 1111)
+- **Status Messages**: Real-time feedback on all operations
+
+### Admin Functions (Both Versions):
 - Remove products
 - Change product prices
 - Update product quantities
