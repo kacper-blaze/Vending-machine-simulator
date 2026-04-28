@@ -6,7 +6,8 @@ out/
 # Compiled executables
 *.exe
 *.out
-vending_machine_simulator
+vendingMachineSimulator
+vendingMachineSimulatorGUI
 
 # Object files
 *.o

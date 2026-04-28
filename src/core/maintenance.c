@@ -99,7 +99,7 @@ void maintenanceProcess() {
             close(pipe_fd);
         }
         
-        sleep(1); // Sprawdzaj co 1 sekundę
+        sleep(1); // Sprawdzanie co sekundę
     }
     
     writeLog(LOG_SYSTEM, "Proces maintenance zakończony");

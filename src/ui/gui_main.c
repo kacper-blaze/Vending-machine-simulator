@@ -143,56 +143,32 @@ static void on_product_clicked(GtkWidget *widget, gpointer data) {
         return;
     }
     
-    // Process purchase
-    vm.balance_gr -= product->price_gr;
-    product->quantity--;
+    // Process purchase via core function (handles logging and auto change return)
+    selectProduct(&vm, product_index);
     
     snprintf(status_msg, sizeof(status_msg), 
-            "Zakupiono: %s za %.2f zł", 
-            product->name, product->price_gr / 100.0);
+            "Zakupiono: %s", 
+            product->name);
     gtk_label_set_text(GTK_LABEL(status_label), status_msg);
     
     update_balance_display();
     update_product_display();
-    
-    // Auto-return change if any
-    if (vm.balance_gr > 0) {
-        on_return_change_clicked(NULL, NULL);
-    }
 }
 
 static void on_return_change_clicked(GtkWidget *widget, gpointer data) {
+    (void)widget;
+    (void)data;
+    
     if (vm.balance_gr == 0) {
         gtk_label_set_text(GTK_LABEL(status_label), "Brak reszty do zwrotu");
         return;
     }
     
-    int change_to_return = vm.balance_gr;
-    char change_msg[512] = "Zwrócono resztę: ";
-    char temp[64];
+    returnChange(&vm);
     
-    for (int i = 5; i >= 0; i--) {
-        int coin_value = accepted_coins[i].value_gr;
-        int coins_needed = change_to_return / coin_value;
-        int coins_available = vm.coin_inventory[i];
-        int coins_to_use = (coins_needed < coins_available) ? coins_needed : coins_available;
-        
-        if (coins_to_use > 0) {
-            snprintf(temp, sizeof(temp), "%dx %s ", coins_to_use, accepted_coins[i].key);
-            strcat(change_msg, temp);
-            change_to_return -= coins_to_use * coin_value;
-            vm.coin_inventory[i] -= coins_to_use;
-        }
-    }
-    
-    if (change_to_return > 0) {
-        snprintf(temp, sizeof(temp), "(brakuje %.2f zł)", change_to_return / 100.0);
-        strcat(change_msg, temp);
-    }
-    
-    vm.balance_gr = 0;
-    gtk_label_set_text(GTK_LABEL(status_label), change_msg);
+    gtk_label_set_text(GTK_LABEL(status_label), "Zwrócono resztę");
     update_balance_display();
+    update_product_display();
 }
 
 static void on_admin_clicked(GtkWidget *widget, gpointer data) {

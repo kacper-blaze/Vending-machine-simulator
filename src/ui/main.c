@@ -131,7 +131,7 @@ void adminMenu(VendingMachine *vm) {
         admin_choice = getIntInput();
 
         switch(admin_choice) {
-            case 1:
+            case 1: {
                 printf("Podaj numer produktu do usunięcia: ");
                 int index = getIntInput();
                 removeProduct(vm, index);
@@ -144,7 +144,8 @@ void adminMenu(VendingMachine *vm) {
                 sprintf(pipe_msg, "ADMIN:Usunięto produkt nr %d", index);
                 sendMessageToMaintenance(pipe_msg);
                 break;
-            case 2:
+            }
+            case 2: {
                 printf("Podaj numer produktu: ");
                 int price_index = getIntInput();
                 printf("Podaj nową cenę w groszach: ");
@@ -155,7 +156,8 @@ void adminMenu(VendingMachine *vm) {
                 sprintf(price_log_msg, "Admin zmienił cenę produktu nr %d na %d gr", price_index, new_price);
                 writeLog(LOG_ADMIN, price_log_msg);
                 break;
-            case 3:
+            }
+            case 3: {
                 printf("Podaj numer produktu: ");
                 int qty_index = getIntInput();
                 printf("Podaj nową ilość: ");
@@ -166,31 +168,36 @@ void adminMenu(VendingMachine *vm) {
                 sprintf(qty_log_msg, "Admin zmienił ilość produktu nr %d na %d", qty_index, new_qty);
                 writeLog(LOG_ADMIN, qty_log_msg);
                 break;
-            case 4:
+            }
+            case 4: {
+                char name[50];
+                int price;
+                int quantity;
+                Product new_product;
+
                 if (vm->product_count >= MAX_PRODUCTS) {
                     printf("Automat jest pełny. Nie można dodać więcej produktów.\n");
                     break;
                 }
 
                 printf("Podaj nazwę produktu: ");
-                char name[50];
                 fgets(name, sizeof(name), stdin);
                 name[strcspn(name, "\n")] = 0;
 
                 printf("Podaj cenę w groszach: ");
-                int price = getIntInput();
+                price = getIntInput();
 
                 printf("Podaj ilość: ");
-                int quantity = getIntInput();
+                quantity = getIntInput();
 
-                Product new_product;
                 strcpy(new_product.name, name);
                 new_product.price_gr = price;
                 new_product.quantity = quantity;
 
                 addProduct(vm, new_product, quantity);
                 break;
-            case 5:
+            }
+            case 5: {
                 printf("\n=== STAN MONET W AUTOMACIE ===\n");
                 for (int i = 0; i < 6; i++) {
                     printf("%s: %d szt (%.2f zł)\n",
@@ -205,6 +212,7 @@ void adminMenu(VendingMachine *vm) {
                 }
                 printf("\nCałkowita wartość monet: %.2f zł\n", total_value_gr / 100.0);
                 break;
+            }
             case 6: printf("Powrót do głównego menu\n"); break;
             default: printf("Nieprawidłowa opcja\n");
         }
@@ -229,7 +237,7 @@ int main() {
 
     printf("=== AUTOMAT VENDINGOWY URUCHOMIONY ===\n");
     printf("Proces maintenance działa w tle (PID: %d)\n", maintenance_pid);
-    printf("Logi zapisywane do pliku: %s\n", LOG_FILE);
+    // printf("Logi zapisywane do pliku: %s\n", LOG_FILE);
     
     int choice;
     while (main_running) {
@@ -250,11 +258,12 @@ int main() {
         switch(choice) {
             case 1: displayProducts(&vm); break;
             case 2: insertMoneyFromConsole(&vm); break;
-            case 3:
+            case 3: {
                 printf("Wybierz numer produktu: ");
                 int product_num = getIntInput();
                 selectProduct(&vm, product_num);
                 break;
+            }
             case 4: returnChange(&vm); break;
             case 5:
                 if (verifyAdminPin()) {
