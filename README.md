@@ -9,6 +9,11 @@ C-based vending machine simulator with product management, coin handling, and ad
 - **Admin Panel**: Secure admin access with PIN protection for inventory management
 - **Change Calculation**: Automatic change calculation and return
 - **Inventory Tracking**: Real-time tracking of products and coins in the machine
+- **Background Maintenance**: Separate maintenance process for system monitoring
+- **Comprehensive Logging**: All operations logged to vending_machine.log
+- **Inter-Process Communication**: Named pipe communication between processes
+- **Signal Handling**: Graceful shutdown with SIGINT/SIGTERM support
+- **Real-time Balance Display**: Shows current balance after coin insertion
 
 ## Building
 
@@ -42,6 +47,28 @@ Run the executable:
 - Add new products
 - View coin inventory status
 
+## Logging and Monitoring
+
+The simulator includes a comprehensive logging system:
+
+- **Log File**: All operations are logged to `vending_machine.log`
+- **Log Types**: TRANSACTION, ADMIN, COIN, PRODUCT, SYSTEM, ALERT
+- **Background Process**: Maintenance process runs independently for monitoring
+- **Real-time Logging**: Events are logged immediately as they occur
+- **Process Communication**: Uses named pipes (`/tmp/vm_pipe`) for IPC
+
+### Log Format:
+```
+[YYYY-MM-DD HH:MM:SS] [TYPE] Description
+```
+
+Example log entries:
+```
+[2024-04-28 14:01:25] [SYSTEM] System uruchomiony - logger zainicjalizowany
+[2024-04-28 14:01:30] [COIN] Przyjęto monetę: 5zł (saldo: 5.00 zł)
+[2024-04-28 14:02:15] [TRANSACTION] Zakup: Cola za 3.50 zł
+```
+
 ## Technical Details
 
 - **Language**: C
@@ -49,6 +76,9 @@ Run the executable:
 - **Currency**: Polish Złoty (PLN)
 - **Max Products**: 10
 - **Max Quantity per Product**: 30
+- **Processes**: Main process + background maintenance process
+- **IPC**: Named pipes (`/tmp/vm_pipe`)
+- **Signals**: SIGINT, SIGTERM, SIGCHLD, SIGPIPE handling
 
 ## License
 

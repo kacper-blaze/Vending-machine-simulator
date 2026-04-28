@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <signal.h>
 
 extern coin accepted_coins[] = {
     {"10gr", 10},
@@ -41,7 +43,7 @@ void initMachine(VendingMachine *vm) {
 }
 
 void displayProducts(const VendingMachine *vm) {
-    printf("Current balance: %.2f zł\n\n", vm->balance_gr / 100.0);
+    printf("balans środków: %.2f zł\n\n", vm->balance_gr / 100.0);
     for (int i = 0; i < vm->product_count; i++) {
         printf("%d. %s - %.2f zł, ilość: %d\n", i + 1, vm->products[i].name, vm->products[i].price_gr / 100.0, vm->products[i].quantity);
     }
@@ -51,6 +53,10 @@ void insertMoney(VendingMachine *vm, int amount_gr) {
     if (amount_gr <= 0) {
         printf("Nieprawidłowa kwota\n");
         printf("Moneta wróciła do Ciebie\n"); //fizyczny zwrot, automat nie przyjął nominału
+        
+        char log_msg[200];
+        sprintf(log_msg, "Odrzucono nieprawidłową monetę: %d gr", amount_gr);
+        writeLog(LOG_COIN, log_msg);
         return;
     }
 
@@ -59,11 +65,26 @@ void insertMoney(VendingMachine *vm, int amount_gr) {
             vm->coin_inventory[i]++;
             vm->balance_gr += amount_gr;
             printf("Przyjęto monetę: %s\n", accepted_coins[i].key);
+            printf("balans środków: %.2f zł\n\n", vm->balance_gr / 100.0);
+            
+            char log_msg[200];
+            sprintf(log_msg, "Przyjęto monetę: %s (saldo: %.2f zł)", 
+                   accepted_coins[i].key, vm->balance_gr / 100.0);
+            writeLog(LOG_COIN, log_msg);
+            
+            // Wysłanie wiadomości do procesu maintenance
+            char pipe_msg[256];
+            sprintf(pipe_msg, "COIN:Przyjęto monetę %s", accepted_coins[i].key);
+            sendMessageToMaintenance(pipe_msg);
             return;
         }
     }
 
     printf("Nieprzyjęta moneta, moneta wróciła do Ciebie\n");
+    
+    char log_msg[200];
+    sprintf(log_msg, "Odrzucono nieznany nominał: %d gr", amount_gr);
+    writeLog(LOG_COIN, log_msg);
 }
 
 void addProduct(VendingMachine *vm, Product product, int additional_quantity) {
@@ -160,6 +181,10 @@ void updateProductQuantity(VendingMachine *vm, int index, int new_quantity) {
 void selectProduct(VendingMachine *vm, int index) {
     if (index < 1 || index > vm->product_count) {
         printf("Nieprawidłowy numer produktu\n");
+        
+        char log_msg[200];
+        sprintf(log_msg, "Nieprawidłowy wybór produktu: %d", index);
+        writeLog(LOG_TRANSACTION, log_msg);
         return;
     }
 
@@ -168,6 +193,10 @@ void selectProduct(VendingMachine *vm, int index) {
 
     if (vm->products[index-1].quantity == 0) {
         printf("Produkt '%s' jest niedostępny\n", vm->products[index-1].name);
+        
+        char log_msg[200];
+        sprintf(log_msg, "Próba zakupu niedostępnego produktu: %s (ilość: 0)", vm->products[index-1].name);
+        writeLog(LOG_TRANSACTION, log_msg);
         return;
     }
 
@@ -176,6 +205,12 @@ void selectProduct(VendingMachine *vm, int index) {
     if (vm->balance_gr < vm->products[index-1].price_gr) {
         printf("Niewystarczająca kwota. Brakuje: %.2f zł\n",
             (vm->products[index-1].price_gr - vm->balance_gr) / 100.0);
+        
+        char log_msg[200];
+        sprintf(log_msg, "Niewystarczająca kwota dla produktu %s: brak %.2f zł", 
+               vm->products[index-1].name, 
+               (vm->products[index-1].price_gr - vm->balance_gr) / 100.0);
+        writeLog(LOG_TRANSACTION, log_msg);
         return;
     }
 
@@ -183,6 +218,20 @@ void selectProduct(VendingMachine *vm, int index) {
     vm->products[index-1].quantity--;
 
     printf("Zakup udany! Produkt '%s' wydany.\n", vm->products[index-1].name);
+    
+    char log_msg[200];
+    sprintf(log_msg, "Zakup: %s za %.2f zł (saldo: %.2f zł, pozostało: %d szt)", 
+           vm->products[index-1].name, 
+           vm->products[index-1].price_gr / 100.0,
+           vm->balance_gr / 100.0,
+           vm->products[index-1].quantity);
+    writeLog(LOG_TRANSACTION, log_msg);
+    
+    // Wysłanie wiadomości do procesu maintenance
+    char pipe_msg[256];
+    sprintf(pipe_msg, "TRANSACTION:Zakup %s za %.2f zł", 
+           vm->products[index-1].name, vm->products[index-1].price_gr / 100.0);
+    sendMessageToMaintenance(pipe_msg);
 
     if (vm->balance_gr > 0) {
         returnChange(vm);

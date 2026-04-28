@@ -2,6 +2,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+static int main_running = 1;
+pid_t maintenance_pid = -1;
+
+void signalHandler(int sig) {
+    switch (sig) {
+        case SIGINT:
+            printf("\nOtrzymano SIGINT - eleganckie zamykanie...\n");
+            main_running = 0;
+            break;
+        case SIGTERM:
+            printf("\nOtrzymano SIGTERM - zamykanie systemu...\n");
+            main_running = 0;
+            break;
+        case SIGCHLD:
+            // Obsługa zakończenia procesu potomnego
+            int status;
+            pid_t pid = waitpid(-1, &status, WNOHANG);
+            if (pid == maintenance_pid) {
+                printf("Proces maintenance zakończony\n");
+                maintenance_pid = -1;
+            }
+            break;
+    }
+}
+
+void cleanup() {
+    if (maintenance_pid > 0) {
+        kill(maintenance_pid, SIGTERM);
+        waitpid(maintenance_pid, NULL, 0);
+    }
+    closeLogger();
+    unlink(PIPE_PATH);
+}
 
 int getIntInput() {
     char buffer[100];
@@ -16,7 +53,19 @@ int verifyAdminPin() {
     fgets(input, sizeof(input), stdin);
     input[strcspn(input, "\n")] = 0;
 
-    return strcmp(input, "1111") == 0;
+    int result = strcmp(input, "1111") == 0;
+    
+    char log_msg[200];
+    sprintf(log_msg, "Próba dostępu admina: %s", result ? "sukces" : "niepowodzenie");
+    writeLog(LOG_ADMIN, log_msg);
+    
+    if (result) {
+        char pipe_msg[256];
+        sprintf(pipe_msg, "ADMIN:Otwarto panel admina");
+        sendMessageToMaintenance(pipe_msg);
+    }
+    
+    return result;
 }
 
 void showAdminMenu() {
@@ -79,6 +128,14 @@ void adminMenu(VendingMachine *vm) {
                 printf("Podaj numer produktu do usunięcia: ");
                 int index = getIntInput();
                 removeProduct(vm, index);
+                
+                char log_msg[200];
+                sprintf(log_msg, "Admin usunął produkt nr %d", index);
+                writeLog(LOG_ADMIN, log_msg);
+                
+                char pipe_msg[256];
+                sprintf(pipe_msg, "ADMIN:Usunięto produkt nr %d", index);
+                sendMessageToMaintenance(pipe_msg);
                 break;
             case 2:
                 printf("Podaj numer produktu: ");
@@ -86,6 +143,10 @@ void adminMenu(VendingMachine *vm) {
                 printf("Podaj nową cenę w groszach: ");
                 int new_price = getIntInput();
                 updateProductPrice(vm, price_index, new_price);
+                
+                char price_log_msg[200];
+                sprintf(price_log_msg, "Admin zmienił cenę produktu nr %d na %d gr", price_index, new_price);
+                writeLog(LOG_ADMIN, price_log_msg);
                 break;
             case 3:
                 printf("Podaj numer produktu: ");
@@ -93,6 +154,10 @@ void adminMenu(VendingMachine *vm) {
                 printf("Podaj nową ilość: ");
                 int new_qty = getIntInput();
                 updateProductQuantity(vm, qty_index, new_qty);
+                
+                char qty_log_msg[200];
+                sprintf(qty_log_msg, "Admin zmienił ilość produktu nr %d na %d", qty_index, new_qty);
+                writeLog(LOG_ADMIN, qty_log_msg);
                 break;
             case 4:
                 if (vm->product_count >= MAX_PRODUCTS) {
@@ -140,11 +205,27 @@ void adminMenu(VendingMachine *vm) {
 }
 
 int main() {
+    // Ustawienie obsługi sygnałów
+    signal(SIGINT, signalHandler);
+    signal(SIGTERM, signalHandler);
+    signal(SIGCHLD, signalHandler);
+    
+    // Inicjalizacja systemu
+    setupPipe();
+    initLogger();
+    
+    // Uruchomienie procesu maintenance
+    startMaintenanceProcess();
+    
     VendingMachine vm;
     initMachine(&vm);
 
+    printf("=== AUTOMAT VENDINGOWY URUCHOMIONY ===\n");
+    printf("Proces maintenance działa w tle (PID: %d)\n", maintenance_pid);
+    printf("Logi zapisywane do pliku: %s\n", LOG_FILE);
+    
     int choice;
-    do {
+    while (main_running) {
         showMenu();
         choice = getIntInput();
 
@@ -164,10 +245,17 @@ int main() {
                     printf("Nieprawidłowy PIN!\n");
                 }
                 break;
-            case 6: printf("Dziękujemy!\n"); break;
+            case 6: 
+                printf("Dziękujemy!\n");
+                main_running = 0;
+                break;
             default: printf("Nieprawidłowa opcja\n");
         }
-    } while (choice != 6);
+    }
 
+    // Sprzątanie przed wyjściem
+    cleanup();
+    printf("System zakończony.\n");
+    
     return 0;
 }
