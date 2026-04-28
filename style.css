@@ -1,0 +1,80 @@
+/* Vending Machine GUI Styles */
+
+#title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+#balance {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2E7D32;
+    margin-bottom: 15px;
+}
+
+/* Product buttons */
+button {
+    font-size: 14px;
+    padding: 10px;
+    border: 2px solid #1976D2;
+    border-radius: 8px;
+    background-color: #E3F2FD;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background-color: #BBDEFB;
+    border-color: #0D47A1;
+}
+
+button:active {
+    background-color: #90CAF9;
+}
+
+/* Coin buttons */
+button:only-child {
+    background-color: #FFF3E0;
+    border-color: #F57C00;
+    font-weight: bold;
+}
+
+button:only-child:hover {
+    background-color: #FFE0B2;
+}
+
+/* Control buttons */
+GtkBox > button:last-child {
+    background-color: #F3E5F5;
+    border-color: #7B1FA2;
+}
+
+GtkBox > button:last-child:hover {
+    background-color: #E1BEE7;
+}
+
+/* Status label */
+label:last-child {
+    font-style: italic;
+    color: #666666;
+    margin-top: 10px;
+}
+
+/* Grid layout */
+grid {
+    margin: 10px;
+}
+
+/* Dialog styling */
+dialog {
+    border: 3px solid #7B1FA2;
+    border-radius: 10px;
+}
+
+/* Entry field for PIN */
+entry {
+    font-size: 16px;
+    padding: 8px;
+    border: 2px solid #7B1FA2;
+    border-radius: 5px;
+}

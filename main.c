@@ -7,7 +7,6 @@
 #include <sys/wait.h>
 
 static int main_running = 1;
-pid_t maintenance_pid = -1;
 
 void signalHandler(int sig) {
     switch (sig) {

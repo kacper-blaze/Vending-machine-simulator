@@ -9,7 +9,7 @@
 #include <errno.h>
 
 extern coin accepted_coins[];
-extern pid_t maintenance_pid;
+pid_t maintenance_pid = -1;
 
 static int maintenance_running = 1;
 
