@@ -3,12 +3,15 @@ project(vendingMachineSimulator C)
 
 set(CMAKE_C_STANDARD 99)
 
+# Include directory for core headers
+include_directories(src/core)
+
 # Console version (always builds)
-add_executable(vendingMachineSimulator main.c
-        vending_machine.h
-        vending_machine.c
-        logger.c
-        maintenance.c)
+add_executable(vendingMachineSimulator src/ui/main.c
+        src/core/vending_machine.h
+        src/core/vending_machine.c
+        src/core/logger.c
+        src/core/maintenance.c)
 target_link_libraries(vendingMachineSimulator pthread)
 
 # Try to find GTK+3 for GUI version
@@ -18,11 +21,11 @@ if(PkgConfig_FOUND)
     
     if(GTK3_FOUND)
         # GUI version (only builds if GTK+3 is available)
-        add_executable(vendingMachineSimulatorGUI gui_main.c
-                vending_machine.h
-                vending_machine.c
-                logger.c
-                maintenance.c)
+        add_executable(vendingMachineSimulatorGUI src/ui/gui_main.c
+                src/core/vending_machine.h
+                src/core/vending_machine.c
+                src/core/logger.c
+                src/core/maintenance.c)
         
         target_include_directories(vendingMachineSimulatorGUI PRIVATE ${GTK3_INCLUDE_DIRS})
         target_link_libraries(vendingMachineSimulatorGUI ${GTK3_LIBRARIES})
