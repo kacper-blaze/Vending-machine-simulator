@@ -55,7 +55,7 @@ void insertMoney(VendingMachine *vm, int amount_gr) {
         printf("Moneta wróciła do Ciebie\n"); //fizyczny zwrot, automat nie przyjął nominału
         
         char log_msg[200];
-        sprintf(log_msg, "Odrzucono nieprawidłową monetę: %d gr", amount_gr);
+        sprintf(log_msg, "Odrzucono nieprawidłową monetę: %d", amount_gr);
         writeLog(LOG_COIN, log_msg);
         return;
     }
@@ -83,7 +83,7 @@ void insertMoney(VendingMachine *vm, int amount_gr) {
     printf("Nieprzyjęta moneta, moneta wróciła do Ciebie\n");
     
     char log_msg[200];
-    sprintf(log_msg, "Odrzucono nieznany nominał: %d gr", amount_gr);
+    sprintf(log_msg, "Odrzucono nieznany nominał: %d", amount_gr);
     writeLog(LOG_COIN, log_msg);
 }
 

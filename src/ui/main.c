@@ -11,7 +11,7 @@ static int main_running = 1;
 void signalHandler(int sig) {
     switch (sig) {
         case SIGINT:
-            printf("\nOtrzymano SIGINT - eleganckie zamykanie...\n");
+            printf("\nOtrzymano SIGINT - Bezpieczne zamykanie...\n");
             main_running = 0;
             break;
         case SIGTERM:

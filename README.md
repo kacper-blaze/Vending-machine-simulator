@@ -165,6 +165,91 @@ A background maintenance process starts automatically and communicates with the 
 
 The maintenance process monitors coin levels, product stock, and hardware status, sending alerts through the pipe when thresholds are crossed.
 
+## Programming Constructions
+
+### Data Structures
+
+**Structures for State Management**
+- `VendingMachine` - Central data structure containing products array, balance, and coin inventory
+- `Product` - Encapsulates product information (name, price in grosz, quantity) 
+- `coin` - Key-value pairs for coin denominations and their grosz values
+- `LogEntry` - Timestamped log entries with event categorization
+
+**Why:** Structures provide logical grouping of related data and enable efficient memory management. Using grosz (integer) instead of złoty (float) prevents floating-point precision errors in financial calculations.
+
+### Process Architecture
+
+**Multi-Process Design**
+- Main process handles user interaction and core vending logic
+- Background maintenance process monitors system health
+- Inter-Process Communication via named pipes (`/tmp/vm_pipe`)
+
+**Why:** Separation of concerns improves reliability - maintenance process can continue monitoring even if main process crashes. Named pipes provide simple, reliable IPC without complex synchronization.
+
+### Signal Handling
+
+**Comprehensive Signal Management**
+```c
+signal(SIGINT, signalHandler);    // Graceful shutdown on Ctrl+C
+signal(SIGTERM, signalHandler);   // Termination from system
+signal(SIGCHLD, signalHandler);   // Child process cleanup
+signal(SIGPIPE, SIG_IGN);         // Ignore broken pipes
+```
+
+**Why:** Ensures proper resource cleanup and prevents zombie processes. Ignoring SIGPIPE prevents crashes when pipe communication fails.
+
+### Memory Management
+
+**Static Arrays vs Dynamic Allocation**
+- Fixed-size arrays for products (`MAX_PRODUCTS`) and coins
+- Stack allocation for most data structures
+- Minimal heap usage to prevent memory leaks
+
+**Why:** Predictable memory usage simplifies debugging and eliminates memory leak risks in embedded-like environments.
+
+### Enumerated Types
+
+**Type Safety for Log Categories**
+```c
+typedef enum {
+    LOG_TRANSACTION,
+    LOG_ALERT,
+    LOG_ADMIN,
+    LOG_COIN,
+    LOG_PRODUCT,
+    LOG_SYSTEM
+} LogType;
+```
+
+**Why:** Provides compile-time type checking and self-documenting code compared to magic numbers or strings.
+
+### Function Pointers & Callbacks
+
+**GTK+3 Event Handling**
+```c
+g_signal_connect(button, "clicked", G_CALLBACK(on_coin_clicked), coin_value);
+```
+
+**Why:** Event-driven architecture essential for GUI responsiveness. Callbacks enable loose coupling between UI and business logic.
+
+### File I/O Patterns
+
+**Robust Logging with Fallback Paths**
+- Searches multiple directories for log file location
+- Thread-safe file operations
+- Structured log format with timestamps and categories
+
+**Why:** Ensures logging works across different deployment scenarios and provides audit trail for debugging.
+
+### Error Handling
+
+**Defensive Programming**
+- Input validation for coin parsing and product selection
+- Boundary checking for array access
+- Graceful degradation when resources unavailable
+
+**Why:** Prevents crashes from invalid user input and system resource issues.
+
 ## Technical Details
 
 | Property | Value |
